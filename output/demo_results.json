@@ -1,0 +1,152 @@
+[
+  {
+    "vehicle_id": "EV-1001",
+    "timestamp": "2026-09-01T08:15:00Z",
+    "classification": {
+      "vehicle_id": "EV-1001",
+      "timestamp": "2026-09-01T08:15:00Z",
+      "anomalies": [],
+      "is_anomalous": false
+    },
+    "explanation": null,
+    "triage": {
+      "vehicle_id": "EV-1001",
+      "overall_severity": "low",
+      "route": "dashboard_alert",
+      "is_anomalous": false
+    }
+  },
+  {
+    "vehicle_id": "EV-1002",
+    "timestamp": "2026-09-01T08:16:00Z",
+    "classification": {
+      "vehicle_id": "EV-1002",
+      "timestamp": "2026-09-01T08:16:00Z",
+      "anomalies": [],
+      "is_anomalous": false
+    },
+    "explanation": null,
+    "triage": {
+      "vehicle_id": "EV-1002",
+      "overall_severity": "low",
+      "route": "dashboard_alert",
+      "is_anomalous": false
+    }
+  },
+  {
+    "vehicle_id": "EV-1003",
+    "timestamp": "2026-09-01T08:17:00Z",
+    "classification": {
+      "vehicle_id": "EV-1003",
+      "timestamp": "2026-09-01T08:17:00Z",
+      "anomalies": [],
+      "is_anomalous": false
+    },
+    "explanation": null,
+    "triage": {
+      "vehicle_id": "EV-1003",
+      "overall_severity": "low",
+      "route": "dashboard_alert",
+      "is_anomalous": false
+    }
+  },
+  {
+    "vehicle_id": "EV-1004",
+    "timestamp": "2026-09-01T08:18:00Z",
+    "classification": {
+      "vehicle_id": "EV-1004",
+      "timestamp": "2026-09-01T08:18:00Z",
+      "anomalies": [
+        {
+          "type": "cell_voltage_deviation",
+          "severity_hint": "high",
+          "detail": "Cell 5 reads 3.09 V, which is 16.5% away from the pack average of 3.70 V (threshold: 15%)."
+        }
+      ],
+      "is_anomalous": true
+    },
+    "explanation": {
+      "vehicle_id": "EV-1004",
+      "explanations": [
+        {
+          "anomaly_type": "cell_voltage_deviation",
+          "plain_language_summary": "Vehicle EV-1004 triggered a high-severity alert of type 'cell_voltage_deviation'. Cell 5 reads 3.09 V, which is 16.5% away from the pack average of 3.70 V (threshold: 15%). This pattern is covered by the manufacturer safety advisory retrieved from the knowledge base. Recommended next step: stop fast charging, reduce load on the vehicle, and schedule a cell-level inspection before the next long trip.",
+          "source_advisory": "cell_voltage_deviation"
+        }
+      ],
+      "generation_mode": "mock"
+    },
+    "triage": {
+      "vehicle_id": "EV-1004",
+      "overall_severity": "high",
+      "route": "voice_call_notification",
+      "is_anomalous": true
+    }
+  },
+  {
+    "vehicle_id": "EV-1005",
+    "timestamp": "2026-09-01T08:19:00Z",
+    "classification": {
+      "vehicle_id": "EV-1005",
+      "timestamp": "2026-09-01T08:19:00Z",
+      "anomalies": [
+        {
+          "type": "firmware_integrity",
+          "severity_hint": "high",
+          "detail": "Observed firmware hash deadbeef0011... does not match the known-good hash b7e2d4f61a9c... for this vehicle model."
+        }
+      ],
+      "is_anomalous": true
+    },
+    "explanation": {
+      "vehicle_id": "EV-1005",
+      "explanations": [
+        {
+          "anomaly_type": "firmware_integrity",
+          "plain_language_summary": "Vehicle EV-1005 triggered a high-severity alert of type 'firmware_integrity'. Observed firmware hash deadbeef0011... does not match the known-good hash b7e2d4f61a9c... for this vehicle model. This pattern is covered by the manufacturer safety advisory retrieved from the knowledge base. Recommended next step: treat as a security incident: park the vehicle, disconnect it from any charger, and have an authorized service center re-flash signed firmware.",
+          "source_advisory": "firmware_integrity"
+        }
+      ],
+      "generation_mode": "mock"
+    },
+    "triage": {
+      "vehicle_id": "EV-1005",
+      "overall_severity": "high",
+      "route": "voice_call_notification",
+      "is_anomalous": true
+    }
+  },
+  {
+    "vehicle_id": "EV-1006",
+    "timestamp": "2026-09-01T08:20:00Z",
+    "classification": {
+      "vehicle_id": "EV-1006",
+      "timestamp": "2026-09-01T08:20:00Z",
+      "anomalies": [
+        {
+          "type": "soc_inconsistency",
+          "severity_hint": "high",
+          "detail": "The BMS reports 92% charge, but the average cell voltage of 3.35 V implies roughly 16% (a gap of 76 percentage points)."
+        }
+      ],
+      "is_anomalous": true
+    },
+    "explanation": {
+      "vehicle_id": "EV-1006",
+      "explanations": [
+        {
+          "anomaly_type": "soc_inconsistency",
+          "plain_language_summary": "Vehicle EV-1006 triggered a high-severity alert of type 'soc_inconsistency'. The BMS reports 92% charge, but the average cell voltage of 3.35 V implies roughly 16% (a gap of 76 percentage points). This pattern is covered by the manufacturer safety advisory retrieved from the knowledge base.",
+          "source_advisory": "soc_inconsistency"
+        }
+      ],
+      "generation_mode": "mock"
+    },
+    "triage": {
+      "vehicle_id": "EV-1006",
+      "overall_severity": "high",
+      "route": "voice_call_notification",
+      "is_anomalous": true
+    }
+  }
+]
