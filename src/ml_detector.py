@@ -35,7 +35,9 @@ MODEL_PATH = MODEL_DIR / "isolation_forest.joblib"
 # ---------------------------------------------------------------------------
 BASELINE_N_RECORDS = 250
 BASELINE_SEED = 42
-ISO_FOREST_CONTAMINATION = 0.05  # expected outlier fraction in fleet data
+ISO_FOREST_CONTAMINATION = 0.05  # expected outlier fraction; a small
+# fleet rarely exceeds a few percent anomalous readings, so 5% lets
+# the model flag genuine outliers without flooding the dashboard.
 ISO_FOREST_RANDOM_STATE = 42
 ISO_FOREST_VERSION = "isolation_forest_v1"
 

@@ -28,7 +28,8 @@ telemetry JSON -> rule_engine.classify()  ->  ml_detector.ml_anomaly_score()
   named, adjustable thresholds. This stays the primary, auditable detector.
 - **ML detector** (`src/ml_detector.py`): an IsolationForest trained on a
   synthetic healthy-fleet baseline adds adaptive pattern detection for
-  anomalies the fixed rules don't anticipate.
+  anomalies the fixed rules don't anticipate. In production the model
+  would be re-trained periodically as the fleet mix ages and grows.
 - **Explanation** (`src/explain.py`): keyword retrieval over
   `docs/knowledge_base.md`, then either an LLM-written paragraph (if an API
   key is configured) or a templated paragraph in `--mock` mode.
