@@ -117,32 +117,39 @@ def check_firmware_integrity(record: dict) -> Optional[dict]:
     }
 
 
+def compute_soc_gap(record: dict) -> tuple[float, float]:
+    """Return (implied_soc_pct, gap_from_reported) for a record.
+
+    Reusable by both the rule engine and the ML feature builder so the
+    voltage-to-SoC mapping is defined in exactly one place.
+    """
+    cells = record.get("cell_voltages", [])
+    reported = record.get("state_of_charge_reported_pct")
+    if not cells:
+        return 0.0, 0.0
+    avg_cell_v = sum(cells) / len(cells)
+    implied = max(0.0, min(100.0, (avg_cell_v - CELL_V_EMPTY) / (CELL_V_FULL - CELL_V_EMPTY) * 100.0))
+    gap = abs((reported or 0.0) - implied) if reported is not None else 0.0
+    return implied, gap
+
+
 def check_soc_consistency(record: dict) -> Optional[dict]:
     """Flag a reported SoC that disagrees with the measured cell voltages."""
     cells = record.get("cell_voltages", [])
-    reported_soc = record.get("state_of_charge_reported_pct")
-    if not cells or reported_soc is None:
+    reported = record.get("state_of_charge_reported_pct")
+    if not cells or reported is None:
         return None
-
-    # Estimate what the SoC *should* be, given the average cell voltage.
+    implied, gap = compute_soc_gap(record)
     avg_cell_v = sum(cells) / len(cells)
-    span = CELL_V_FULL - CELL_V_EMPTY
-    implied_soc = max(0.0, min(100.0, (avg_cell_v - CELL_V_EMPTY) / span * 100.0))
-    gap = abs(reported_soc - implied_soc)
-
-    if gap > SOC_GAP_THRESHOLD_PCT:
-        severity = Severity.HIGH
-    elif gap > SOC_GAP_WARN_THRESHOLD_PCT:
-        severity = Severity.MEDIUM
-    else:
+    if gap <= SOC_GAP_WARN_THRESHOLD_PCT:
         return None
-
+    severity = Severity.HIGH if gap > SOC_GAP_THRESHOLD_PCT else Severity.MEDIUM
     return {
         "type": AnomalyType.SOC_INCONSISTENCY.value,
         "severity_hint": severity.value,
         "detail": (
-            f"The BMS reports {reported_soc:.0f}% charge, but the average cell "
-            f"voltage of {avg_cell_v:.2f} V implies roughly {implied_soc:.0f}% "
+            f"The BMS reports {reported:.0f}% charge, but the average cell "
+            f"voltage of {avg_cell_v:.2f} V implies roughly {implied:.0f}% "
             f"(a gap of {gap:.0f} percentage points)."
         ),
     }

@@ -1,16 +1,11 @@
-"""SentinelBMS demo entry point.
+"""SentinelBMS demo entry point (updated with ML signal).
 
-Loads synthetic BMS telemetry, then runs every record through the full
-pipeline:  classify  ->  explain (only for anomalous records)  ->  triage.
+Pipeline: telemetry JSON -> rule_engine.classify() -> ml_detector.ml_anomaly_score()
+          -> triage.triage() -> explain.explain() (anomalous only)
 
 Usage:
-    python src/run_demo.py           # uses an LLM if an API key is set,
-                                     # otherwise falls back to mock mode
-    python src/run_demo.py --mock    # force template-based explanations
-                                     # (fully offline, no API key needed)
-
-Console output is written for humans; the full structured result is saved
-to output/demo_results.json.
+    python src/run_demo.py           # LLM if API key set, else mock
+    python src/run_demo.py --mock    # forced templated explanations
 """
 
 from __future__ import annotations
@@ -20,8 +15,6 @@ import json
 import sys
 from pathlib import Path
 
-# Resolve all paths relative to the project root so the demo works no
-# matter which directory it is launched from.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -30,12 +23,13 @@ KB_PATH = PROJECT_ROOT / "docs" / "knowledge_base.md"
 OUTPUT_PATH = PROJECT_ROOT / "output" / "demo_results.json"
 
 from explain import OpenAICompatibleClient, explain  # noqa: E402
+from ml_detector import ml_anomaly_score  # noqa: E402
 from rule_engine import classify  # noqa: E402
 from triage import triage  # noqa: E402
 
 
 def run_pipeline(mock: bool) -> list[dict]:
-    """Run every telemetry record through classify -> explain -> triage."""
+    """Run every telemetry record through classify -> ML -> triage -> explain."""
     with open(DATA_PATH, "r", encoding="utf-8") as fh:
         records = json.load(fh)
 
@@ -43,17 +37,20 @@ def run_pipeline(mock: bool) -> list[dict]:
     results = []
     for record in records:
         classification = classify(record)
+        ml = ml_anomaly_score(record)
+        merged = {**classification, "ml_signal": ml}
         explanation = (
-            explain(classification, str(KB_PATH), mock=mock, llm_client=client)
-            if classification["is_anomalous"]
+            explain(merged, str(KB_PATH), mock=mock, llm_client=client)
+            if merged["is_anomalous"] or ml.get("is_outlier")
             else None
         )
-        routing = triage(classification)
+        routing = triage(merged)
         results.append(
             {
                 "vehicle_id": record["vehicle_id"],
                 "timestamp": record["timestamp"],
                 "classification": classification,
+                "ml_signal": ml,
                 "explanation": explanation,
                 "triage": routing,
             }
@@ -71,25 +68,31 @@ def print_summary(results: list[dict], mock: bool) -> None:
     for item in results:
         classification = item["classification"]
         routing = item["triage"]
+        ml = item["ml_signal"]
         print(f"\nVehicle: {item['vehicle_id']}   ({item['timestamp']})")
+        print(f"  ML signal: score={ml['anomaly_score']}, outlier={ml['is_outlier']}")
 
-        if not classification["is_anomalous"]:
+        if not classification["is_anomalous"] and not ml["is_outlier"]:
             print("  Status: OK - no anomalies detected; logged for the weekly summary.")
             continue
 
-        print(f"  Status: ANOMALOUS - overall severity: {routing['overall_severity'].upper()}")
-        for anomaly in classification["anomalies"]:
-            print(f"    - [{anomaly['severity_hint']}] {anomaly['type']}: {anomaly['detail']}")
+        if routing["overall_severity"] == "watch":
+            print("  Status: ML-FLAGGED - no rule violated, but pattern is statistically unusual")
+        else:
+            print(f"  Status: ANOMALOUS - overall severity: {routing['overall_severity'].upper()}")
+            for anomaly in classification["anomalies"]:
+                print(f"    - [{anomaly['severity_hint']}] {anomaly['type']}: {anomaly['detail']}")
 
-        for expl in (item["explanation"] or {}).get("explanations", []):
-            print(f"  Explanation ({expl['anomaly_type']}, source: {expl['source_advisory']}):")
-            print(f"    {expl['plain_language_summary']}")
+        if item["explanation"]:
+            for expl in item["explanation"].get("explanations", []):
+                print(f"  Explanation ({expl['anomaly_type']}, source: {expl['source_advisory']}):")
+                print(f"    {expl['plain_language_summary']}")
 
         print(f"  Routing: {routing['route']}")
 
-    flagged = sum(1 for i in results if i["classification"]["is_anomalous"])
+    flagged = sum(1 for i in results if i["triage"]["is_anomalous"])
     print("\n" + "-" * 78)
-    print(f"Processed {len(results)} records: {flagged} anomalous, {len(results) - flagged} clean.")
+    print(f"Processed {len(results)} records: {flagged} flagged ({flagged - sum(1 for i in results if i['classification']['is_anomalous'])} ML-only), {len(results) - flagged} clean.")
 
 
 def write_output(results: list[dict]) -> None:

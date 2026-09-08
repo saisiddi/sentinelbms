@@ -58,5 +58,15 @@
     "state_of_charge_reported_pct": 92.0,
     "firmware_hash": "c9d1e3f52b7a40c8e6d1f3a5b9c2e7d4f0a8c6e1b3d5f7a9c2e4b6d8f0a1c3e57",
     "known_good_firmware_hash": "c9d1e3f52b7a40c8e6d1f3a5b9c2e7d4f0a8c6e1b3d5f7a9c2e4b6d8f0a1c3e57"
+  },
+  {
+    "vehicle_id": "EV-1007",
+    "timestamp": "2026-09-01T08:21:00Z",
+    "pack_avg_voltage": 3.58,
+    "cell_voltages": [3.57, 3.59, 3.58, 3.58, 3.57, 3.59],
+    "pack_temperature_c": 33.5,
+    "state_of_charge_reported_pct": 46.0,
+    "firmware_hash": "c9d1e3f52b7a40c8e6d1f3a5b9c2e7d4f0a8c6e1b3d5f7a9c2e4b6d8f0a1c3e57",
+    "known_good_firmware_hash": "c9d1e3f52b7a40c8e6d1f3a5b9c2e7d4f0a8c6e1b3d5f7a9c2e4b6d8f0a1c3e57"
   }
 ]
